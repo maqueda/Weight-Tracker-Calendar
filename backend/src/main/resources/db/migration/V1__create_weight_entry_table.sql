@@ -22,7 +22,5 @@ CREATE TABLE weight_entry (
     CONSTRAINT ck_weight_entry_positive CHECK (weight_kg > 0)
 );
 
-CREATE INDEX idx_weight_entry_user_date ON weight_entry(user_id, entry_date);
-
 INSERT INTO app_user (id, username, display_name, timezone, created_at)
 VALUES (1, 'demo', 'Usuario Demo', 'Europe/Madrid', CURRENT_TIMESTAMP);

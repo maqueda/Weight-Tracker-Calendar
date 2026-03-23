@@ -2,7 +2,7 @@ spring:
   application:
     name: weight-tracker-calendar-backend
   datasource:
-    url: jdbc:oracle:thin:@localhost:1521/FREEPDB1
+    url: jdbc:oracle:thin:@localhost:1521/XEPDB1
     username: weight_calendar
     password: weight_calendar
     driver-class-name: oracle.jdbc.OracleDriver

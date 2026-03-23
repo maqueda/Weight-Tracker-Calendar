@@ -38,18 +38,36 @@
             class="month-card"
           >
             <h2>{{ month.name }}</h2>
-            <div class="days">
-              <button
-                v-for="day in month.days"
-                :key="day.date"
-                :class="['day', { selected: day.date === store.selectedDate, sunday: day.sunday, filled: day.hasEntry }]"
-                type="button"
-                @click="store.selectDate(day.date)"
+            <div class="weekday-row">
+              <span
+                v-for="weekday in weekdays"
+                :key="weekday"
+                class="weekday"
               >
-                <span>{{ day.label }}</span>
-                <small>{{ day.weight }}</small>
-                <em v-if="day.sunday && weeklySummaryMap[day.date]">{{ weeklySummaryMap[day.date] }}</em>
-              </button>
+                {{ weekday }}
+              </span>
+            </div>
+            <div class="days">
+              <template v-for="day in month.days" :key="day.key">
+                <button
+                  v-if="day.kind === 'day'"
+                  :class="['day', { selected: day.date === store.selectedDate, sunday: day.sunday, filled: day.hasEntry }]"
+                  type="button"
+                  @click="store.selectDate(day.date)"
+                >
+                  <span class="day-number">{{ day.label }}</span>
+                  <div class="day-content">
+                    <small v-if="day.weight" class="day-weight">{{ day.weight }}</small>
+                  </div>
+                  <em
+                    v-if="day.sunday && weeklySummaryMap[day.date]"
+                    class="day-summary"
+                  >
+                    {{ weeklySummaryMap[day.date] }}
+                  </em>
+                </button>
+                <div v-else class="day day-placeholder" aria-hidden="true"></div>
+              </template>
             </div>
           </article>
         </div>
@@ -71,18 +89,30 @@ import { useCalendarStore } from "../store/useCalendarStore";
 
 type MonthBlock = {
   name: string;
-  days: Array<{
-    entryId: number | null;
-    date: string;
-    label: number;
-    weight: string;
-    notes: string | null;
-    hasEntry: boolean;
-    sunday: boolean;
-  }>;
+  days: CalendarCell[];
 };
 
+type DayCell = {
+  kind: "day";
+  key: string;
+  entryId: number | null;
+  date: string;
+  label: number;
+  weight: string;
+  notes: string | null;
+  hasEntry: boolean;
+  sunday: boolean;
+};
+
+type PlaceholderCell = {
+  kind: "placeholder";
+  key: string;
+};
+
+type CalendarCell = DayCell | PlaceholderCell;
+
 const store = useCalendarStore();
+const weekdays = ["L", "M", "X", "J", "V", "S", "D"];
 
 onMounted(() => {
   store.loadYear(store.year);
@@ -90,39 +120,44 @@ onMounted(() => {
 
 const months = computed<MonthBlock[]>(() => {
   const formatter = new Intl.DateTimeFormat("es-ES", { month: "long" });
-  const groups = new Map<number, MonthBlock>();
+  const groups = new Map<number, { name: string; rawDays: DayCell[] }>();
 
   store.days.forEach((day) => {
     if (!groups.has(day.month)) {
       groups.set(day.month, {
         name: formatter.format(new Date(day.date)).replace(/^\w/, (value) => value.toUpperCase()),
-        days: []
+        rawDays: []
       });
     }
 
-    groups.get(day.month)?.days.push({
+    groups.get(day.month)?.rawDays.push({
+      kind: "day",
+      key: day.date,
       entryId: day.entryId,
       date: day.date,
       label: day.dayOfMonth,
-      weight: day.weightKg !== null ? `${day.weightKg.toFixed(2)} kg` : "-",
+      weight: day.weightKg !== null ? day.weightKg.toFixed(1) : "",
       notes: day.notes,
       hasEntry: day.hasEntry,
       sunday: day.sunday
     });
   });
 
-  return Array.from(groups.values());
+  return Array.from(groups.values()).map((month) => ({
+    name: month.name,
+    days: buildCalendarCells(month.rawDays)
+  }));
 });
 
 const weeklySummaryMap = computed<Record<string, string>>(() =>
   Object.fromEntries(
     store.weeklySummaries.map((summary) => {
       if (!summary.complete || summary.deltaKg === null) {
-        return [summary.sundayEndDate, "Incompleta"];
+        return [summary.sundayEndDate, ""];
       }
 
       const prefix = summary.deltaKg > 0 ? "+" : "";
-      return [summary.sundayEndDate, `${prefix}${summary.deltaKg.toFixed(2)} kg`];
+      return [summary.sundayEndDate, `${prefix}${summary.deltaKg.toFixed(1)}`];
     })
   )
 );
@@ -169,6 +204,41 @@ function changeYear(direction: number) {
 
 async function handleSave(payload: { entryId: number | null; entryDate: string; weightKg: number; notes?: string }) {
   await store.saveEntry(payload);
+}
+
+function buildCalendarCells(days: DayCell[]): CalendarCell[] {
+  if (days.length === 0) {
+    return [];
+  }
+
+  const firstDate = new Date(days[0].date);
+  const mondayBasedOffset = (firstDate.getDay() + 6) % 7;
+  const cells: CalendarCell[] = [];
+
+  for (let index = 0; index < mondayBasedOffset; index += 1) {
+    cells.push({
+      kind: "placeholder",
+      key: `${days[0].date}-leading-${index}`
+    });
+  }
+
+  cells.push(...days);
+
+  while (cells.length % 7 !== 0) {
+    cells.push({
+      kind: "placeholder",
+      key: `${days[0].date}-trailing-${cells.length}`
+    });
+  }
+
+  while (cells.length < 42) {
+    cells.push({
+      kind: "placeholder",
+      key: `${days[0].date}-tail-${cells.length}`
+    });
+  }
+
+  return cells;
 }
 </script>
 
@@ -268,7 +338,7 @@ h1 {
 
 .month-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 20px;
 }
 
@@ -284,34 +354,90 @@ h1 {
   margin-top: 0;
 }
 
+.weekday-row {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.weekday {
+  text-align: center;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #6b8099;
+}
+
 .days {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-auto-rows: 98px;
   gap: 8px;
+  align-items: stretch;
 }
 
 .day {
-  min-height: 72px;
+  position: relative;
+  min-height: 0;
+  width: 100%;
   border: 0;
   border-radius: 14px;
   background: #eef4fb;
   color: #18304c;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  padding: 10px 8px;
+  justify-content: flex-start;
+  padding: 10px 9px;
   cursor: pointer;
   text-align: left;
+  overflow: hidden;
+  gap: 6px;
 }
 
-.day small {
-  color: #6b8099;
+.day-number {
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1;
 }
 
-.day em {
+.day-content {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.day-weight {
+  display: block;
+  color: #35506d;
+  font-size: 0.86rem;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.day-summary {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  max-width: calc(100% - 12px);
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: rgba(19, 34, 56, 0.12);
   font-style: normal;
-  font-size: 0.68rem;
+  font-size: 0.66rem;
+  font-weight: 700;
   color: #214a31;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .day.selected {
@@ -326,6 +452,19 @@ h1 {
   background: #eef8e8;
 }
 
+.day-placeholder {
+  background: transparent;
+  border: 1px dashed rgba(170, 187, 205, 0.35);
+  cursor: default;
+  gap: 0;
+}
+
+@media (max-width: 1400px) {
+  .month-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 768px) {
   .page {
     padding: 20px;
@@ -337,6 +476,44 @@ h1 {
 
   .layout {
     grid-template-columns: 1fr;
+  }
+
+  .month-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .month-card {
+    padding: 16px;
+  }
+
+  .weekday-row,
+  .days {
+    gap: 5px;
+  }
+
+  .days {
+    grid-auto-rows: 64px;
+  }
+
+  .day {
+    padding: 7px 5px;
+    border-radius: 12px;
+  }
+
+  .day-number {
+    font-size: 0.86rem;
+  }
+
+  .day-weight {
+    font-size: 0.68rem;
+  }
+
+  .day-summary {
+    right: 4px;
+    bottom: 4px;
+    min-width: 24px;
+    padding: 1px 4px;
+    font-size: 0.58rem;
   }
 }
 </style>

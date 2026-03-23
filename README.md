@@ -28,6 +28,53 @@ Aplicacion web para registrar el peso dia a dia en un calendario anual y compara
 2. Arrancar el backend para ejecutar Flyway
 3. Arrancar el frontend en `http://localhost:5173`
 
+### Oracle XE
+
+El backend esta configurado para conectarse a:
+
+- host: `localhost`
+- puerto: `1521`
+- servicio: `XEPDB1`
+- usuario: `weight_calendar`
+- password: `weight_calendar`
+
+Puedes crear el usuario ejecutando el script [docs/oracle-xe-setup.sql](C:/Users/juanm/OneDrive/Documentos/New%20project%207/docs/oracle-xe-setup.sql) desde una sesion con privilegios de administrador, por ejemplo `SYSTEM`.
+
+Ejemplo desde SQL*Plus:
+
+```sql
+sqlplus system/TU_PASSWORD@localhost:1521/XEPDB1
+@docs/oracle-xe-setup.sql
+```
+
+### Backend
+
+Desde [backend](C:/Users/juanm/OneDrive/Documentos/New%20project%207/backend):
+
+```powershell
+mvn spring-boot:run
+```
+
+Al arrancar, Flyway creara:
+
+- `app_user`
+- `weight_entry`
+- secuencias iniciales
+- usuario demo de aplicacion con `id = 1`
+
+La API quedara disponible en `http://localhost:8080`.
+
+### Frontend
+
+Desde [frontend](C:/Users/juanm/OneDrive/Documentos/New%20project%207/frontend):
+
+```powershell
+npm install
+npm run dev
+```
+
+La app quedara disponible en `http://localhost:5173`.
+
 ## Flujo implementado
 
 - Alta de peso diario
