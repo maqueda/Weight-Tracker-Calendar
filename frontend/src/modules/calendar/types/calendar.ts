@@ -14,3 +14,5 @@ export type YearCalendar = {
   year: number;
   days: CalendarDay[];
 };
+
+export type DayTone = "none" | "up" | "down" | "flat";

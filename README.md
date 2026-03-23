@@ -8,6 +8,7 @@ Aplicación web para registrar el peso día a día en un calendario anual y revi
 - Visualiza el año completo en formato calendario.
 - Calcula la variación semanal de domingo a domingo.
 - Permite corregir registros previos.
+- Gestiona un peso objetivo y muestra tendencia mensual.
 
 ## Stack
 
@@ -19,6 +20,7 @@ Aplicación web para registrar el peso día a día en un calendario anual y revi
 
 - `backend/`: API Spring Boot modular
 - `frontend/`: aplicación Vue
+- `scripts/`: arranque y parada para desarrollo en Windows
 - [`docs/architecture.md`](docs/architecture.md): arquitectura funcional y técnica
 - [`docs/oracle-xe-setup.sql`](docs/oracle-xe-setup.sql): script de creación del esquema en Oracle XE
 - [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md): contexto persistente del proyecto
@@ -31,6 +33,7 @@ Aplicación web para registrar el peso día a día en un calendario anual y revi
 - Vista anual del calendario operativa
 - Registro y edición de peso diario operativos
 - Resumen semanal de domingo a domingo operativo
+- Objetivo de peso y tendencia mensual operativos
 
 ## Puesta en marcha local
 
@@ -55,7 +58,19 @@ sqlplus system/TU_PASSWORD@localhost:1521/XEPDB1
 
 ### 2. Arrancar el backend
 
-Desde `backend/`:
+La forma recomendada en Windows es usar el script del proyecto:
+
+```powershell
+.\scripts\start-backend.ps1
+```
+
+Si necesitas detener un backend viejo que siga escuchando en `8080`:
+
+```powershell
+.\scripts\stop-backend.ps1
+```
+
+También puedes arrancarlo manualmente desde `backend/`:
 
 ```powershell
 mvn spring-boot:run
@@ -69,7 +84,13 @@ http://localhost:8080
 
 ### 3. Arrancar el frontend
 
-Desde `frontend/`:
+La forma recomendada en Windows es:
+
+```powershell
+.\scripts\start-frontend.ps1
+```
+
+También puedes arrancarlo manualmente desde `frontend/`:
 
 ```powershell
 npm install
@@ -165,6 +186,8 @@ npm run build
 - Edición de peso ya registrado
 - Consulta del calendario anual completo
 - Cálculo de variación semanal de domingo a domingo
+- Objetivo de peso
+- Tendencia mensual por medias
 - Panel lateral para registrar o corregir el peso del día seleccionado
 
 ## Notas de arquitectura
