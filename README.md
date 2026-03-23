@@ -19,9 +19,9 @@ Aplicación web para registrar el peso día a día en un calendario anual y revi
 
 - `backend/`: API Spring Boot modular
 - `frontend/`: aplicación Vue
-- `docs/architecture.md`: arquitectura funcional y técnica
-- `docs/oracle-xe-setup.sql`: script de creación del esquema en Oracle XE
-- `PROJECT_CONTEXT.md`: contexto persistente del proyecto
+- [`docs/architecture.md`](docs/architecture.md): arquitectura funcional y técnica
+- [`docs/oracle-xe-setup.sql`](docs/oracle-xe-setup.sql): script de creación del esquema en Oracle XE
+- [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md): contexto persistente del proyecto
 
 ## Estado actual
 
@@ -44,7 +44,7 @@ El proyecto está configurado para Oracle XE con estos valores por defecto:
 - usuario: `weight_calendar`
 - contraseña: `weight_calendar`
 
-Puedes crear el usuario ejecutando [docs/oracle-xe-setup.sql](/C:/Users/juanm/OneDrive/Documentos/New%20project%207/docs/oracle-xe-setup.sql) desde una sesión con privilegios de administración, por ejemplo `SYSTEM`.
+Puedes crear el usuario ejecutando [`docs/oracle-xe-setup.sql`](docs/oracle-xe-setup.sql) desde una sesión con privilegios de administración, por ejemplo `SYSTEM`.
 
 Ejemplo:
 
@@ -55,7 +55,7 @@ sqlplus system/TU_PASSWORD@localhost:1521/XEPDB1
 
 ### 2. Arrancar el backend
 
-Desde [backend](/C:/Users/juanm/OneDrive/Documentos/New%20project%207/backend):
+Desde `backend/`:
 
 ```powershell
 mvn spring-boot:run
@@ -69,7 +69,7 @@ http://localhost:8080
 
 ### 3. Arrancar el frontend
 
-Desde [frontend](/C:/Users/juanm/OneDrive/Documentos/New%20project%207/frontend):
+Desde `frontend/`:
 
 ```powershell
 npm install
@@ -90,9 +90,9 @@ El proyecto ya está preparado para separar configuración de `local` y `producc
 
 Archivos principales:
 
-- [application.yml](/C:/Users/juanm/OneDrive/Documentos/New%20project%207/backend/src/main/resources/application.yml)
-- [application-local.yml](/C:/Users/juanm/OneDrive/Documentos/New%20project%207/backend/src/main/resources/application-local.yml)
-- [application-prod.yml](/C:/Users/juanm/OneDrive/Documentos/New%20project%207/backend/src/main/resources/application-prod.yml)
+- [`backend/src/main/resources/application.yml`](backend/src/main/resources/application.yml)
+- [`backend/src/main/resources/application-local.yml`](backend/src/main/resources/application-local.yml)
+- [`backend/src/main/resources/application-prod.yml`](backend/src/main/resources/application-prod.yml)
 
 Qué hace cada uno:
 
@@ -133,7 +133,7 @@ El frontend usa `VITE_API_BASE_URL`.
 
 Archivo de ejemplo:
 
-- [frontend/.env.example](/C:/Users/juanm/OneDrive/Documentos/New%20project%207/frontend/.env.example)
+- [`frontend/.env.example`](frontend/.env.example)
 
 Para local, puedes crear un archivo `.env.local` dentro de `frontend/` con algo así:
 
@@ -177,4 +177,4 @@ npm run build
 ## Continuidad del proyecto
 
 Este repositorio es la base permanente del proyecto `Weight Tracker Calendar`.
-Las decisiones funcionales, técnicas y de roadmap se mantienen en [PROJECT_CONTEXT.md](/C:/Users/juanm/OneDrive/Documentos/New%20project%207/PROJECT_CONTEXT.md).
+Las decisiones funcionales, técnicas y de roadmap se mantienen en [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md).
