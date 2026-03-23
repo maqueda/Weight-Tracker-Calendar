@@ -28,6 +28,8 @@ public class GetYearCalendarUseCase {
     }
 
     public YearCalendarResponse handle(int year) {
+        // Esta consulta construye un año completo, incluyendo días sin registro,
+        // para que el frontend pueda pintar el calendario sin lógica extra.
         LocalDate firstDay = LocalDate.of(year, 1, 1);
         LocalDate lastDay = firstDay.withMonth(12).withDayOfMonth(31);
         Map<LocalDate, WeightEntry> entriesByDate = weightEntryRepository

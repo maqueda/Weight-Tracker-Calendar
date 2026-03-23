@@ -1,89 +1,180 @@
 # Weight Tracker Calendar
 
-Aplicacion web para registrar el peso dia a dia en un calendario anual y comparar la variacion semanal de domingo a domingo.
+Aplicación web para registrar el peso día a día en un calendario anual y revisar la variación semanal comparando domingo contra domingo.
+
+## Qué hace el proyecto
+
+- Registra un peso por fecha.
+- Visualiza el año completo en formato calendario.
+- Calcula la variación semanal de domingo a domingo.
+- Permite corregir registros previos.
 
 ## Stack
 
-- Backend: Java 21, Spring Boot, Oracle
+- Backend: Java 21, Spring Boot, Oracle XE
 - Frontend: Vue 3, Vite, TypeScript
 - Base de datos: Oracle
 
 ## Estructura
 
-- `docs/architecture.md`: arquitectura funcional y tecnica
-- `PROJECT_CONTEXT.md`: contexto persistente del proyecto
 - `backend/`: API Spring Boot modular
-- `frontend/`: aplicacion Vue
+- `frontend/`: aplicación Vue
+- `docs/architecture.md`: arquitectura funcional y técnica
+- `docs/oracle-xe-setup.sql`: script de creación del esquema en Oracle XE
+- `PROJECT_CONTEXT.md`: contexto persistente del proyecto
 
-## Objetivo funcional
+## Estado actual
 
-- Registrar un peso por fecha
-- Visualizar el ano completo en modo calendario
-- Mostrar la variacion semanal tomando como referencia domingo a domingo
-- Permitir correccion de registros previos
+- Backend funcionando sobre Oracle XE
+- Migraciones Flyway funcionando
+- Frontend conectado al backend
+- Vista anual del calendario operativa
+- Registro y edición de peso diario operativos
+- Resumen semanal de domingo a domingo operativo
 
-## Puesta en marcha
+## Puesta en marcha local
 
-1. Levantar Oracle y crear el esquema `weight_calendar`
-2. Arrancar el backend para ejecutar Flyway
-3. Arrancar el frontend en `http://localhost:5173`
+### 1. Preparar Oracle XE
 
-### Oracle XE
-
-El backend esta configurado para conectarse a:
+El proyecto está configurado para Oracle XE con estos valores por defecto:
 
 - host: `localhost`
 - puerto: `1521`
 - servicio: `XEPDB1`
 - usuario: `weight_calendar`
-- password: `weight_calendar`
+- contraseña: `weight_calendar`
 
-Puedes crear el usuario ejecutando el script [docs/oracle-xe-setup.sql](C:/Users/juanm/OneDrive/Documentos/New%20project%207/docs/oracle-xe-setup.sql) desde una sesion con privilegios de administrador, por ejemplo `SYSTEM`.
+Puedes crear el usuario ejecutando [docs/oracle-xe-setup.sql](/C:/Users/juanm/OneDrive/Documentos/New%20project%207/docs/oracle-xe-setup.sql) desde una sesión con privilegios de administración, por ejemplo `SYSTEM`.
 
-Ejemplo desde SQL*Plus:
+Ejemplo:
 
 ```sql
 sqlplus system/TU_PASSWORD@localhost:1521/XEPDB1
 @docs/oracle-xe-setup.sql
 ```
 
-### Backend
+### 2. Arrancar el backend
 
-Desde [backend](C:/Users/juanm/OneDrive/Documentos/New%20project%207/backend):
+Desde [backend](/C:/Users/juanm/OneDrive/Documentos/New%20project%207/backend):
 
 ```powershell
 mvn spring-boot:run
 ```
 
-Al arrancar, Flyway creara:
+La API queda disponible en:
 
-- `app_user`
-- `weight_entry`
-- secuencias iniciales
-- usuario demo de aplicacion con `id = 1`
+```text
+http://localhost:8080
+```
 
-La API quedara disponible en `http://localhost:8080`.
+### 3. Arrancar el frontend
 
-### Frontend
-
-Desde [frontend](C:/Users/juanm/OneDrive/Documentos/New%20project%207/frontend):
+Desde [frontend](/C:/Users/juanm/OneDrive/Documentos/New%20project%207/frontend):
 
 ```powershell
 npm install
 npm run dev
 ```
 
-La app quedara disponible en `http://localhost:5173`.
+La aplicación queda disponible en:
 
-## Flujo implementado
+```text
+http://localhost:5173
+```
+
+## Configuración por entornos
+
+El proyecto ya está preparado para separar configuración de `local` y `producción`.
+
+### Backend
+
+Archivos principales:
+
+- [application.yml](/C:/Users/juanm/OneDrive/Documentos/New%20project%207/backend/src/main/resources/application.yml)
+- [application-local.yml](/C:/Users/juanm/OneDrive/Documentos/New%20project%207/backend/src/main/resources/application-local.yml)
+- [application-prod.yml](/C:/Users/juanm/OneDrive/Documentos/New%20project%207/backend/src/main/resources/application-prod.yml)
+
+Qué hace cada uno:
+
+- `application.yml`: configuración común
+- `application-local.yml`: valores por defecto para desarrollo local
+- `application-prod.yml`: valores pensados para producción
+
+El backend usa estas variables:
+
+- `DB_URL`
+- `DB_USERNAME`
+- `DB_PASSWORD`
+- `APP_CORS_ALLOWED_ORIGINS`
+- `SERVER_PORT`
+
+#### Perfil local
+
+El perfil `local` es el perfil por defecto. No necesitas pasar nada extra si trabajas en tu máquina.
+
+#### Perfil de producción
+
+Para usar producción, arranca Spring Boot indicando el perfil y las variables necesarias.
+
+Ejemplo:
+
+```powershell
+$env:SPRING_PROFILES_ACTIVE="prod"
+$env:DB_URL="jdbc:oracle:thin:@mi-host:1521/XEPDB1"
+$env:DB_USERNAME="weight_calendar"
+$env:DB_PASSWORD="mi_password_segura"
+$env:APP_CORS_ALLOWED_ORIGINS="https://weight-tracker-calendar.example"
+mvn spring-boot:run
+```
+
+### Frontend
+
+El frontend usa `VITE_API_BASE_URL`.
+
+Archivo de ejemplo:
+
+- [frontend/.env.example](/C:/Users/juanm/OneDrive/Documentos/New%20project%207/frontend/.env.example)
+
+Para local, puedes crear un archivo `.env.local` dentro de `frontend/` con algo así:
+
+```env
+VITE_API_BASE_URL=http://localhost:8080/api/v1
+```
+
+Para producción, puedes usar `.env.production`:
+
+```env
+VITE_API_BASE_URL=https://api.weight-tracker-calendar.example/api/v1
+```
+
+Después:
+
+```powershell
+npm run dev
+```
+
+o para build de producción:
+
+```powershell
+npm run build
+```
+
+## Flujo funcional implementado
 
 - Alta de peso diario
-- Edicion de peso ya registrado
+- Edición de peso ya registrado
 - Consulta del calendario anual completo
-- Calculo de variacion semanal de domingo a domingo
-- Panel lateral para registrar o corregir el peso del dia seleccionado
+- Cálculo de variación semanal de domingo a domingo
+- Panel lateral para registrar o corregir el peso del día seleccionado
 
-## Continuidad
+## Notas de arquitectura
+
+- El backend sigue una estructura modular por dominio.
+- El frontend consume la API mediante una URL configurable por entorno.
+- Flyway versiona el esquema Oracle.
+- El usuario actual está simulado con un usuario demo temporal (`id = 1`).
+
+## Continuidad del proyecto
 
 Este repositorio es la base permanente del proyecto `Weight Tracker Calendar`.
-Las decisiones funcionales, tecnicas y de roadmap se mantienen en `PROJECT_CONTEXT.md`.
+Las decisiones funcionales, técnicas y de roadmap se mantienen en [PROJECT_CONTEXT.md](/C:/Users/juanm/OneDrive/Documentos/New%20project%207/PROJECT_CONTEXT.md).

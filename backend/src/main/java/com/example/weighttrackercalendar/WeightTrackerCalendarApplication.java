@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class WeightTrackerCalendarApplication {
 
     public static void main(String[] args) {
+        // Punto de entrada único del backend Spring Boot.
         SpringApplication.run(WeightTrackerCalendarApplication.class, args);
     }
 }

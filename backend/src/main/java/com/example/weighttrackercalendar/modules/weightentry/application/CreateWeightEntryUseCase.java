@@ -28,12 +28,14 @@ public class CreateWeightEntryUseCase {
 
     @Transactional
     public WeightEntryResponse handle(CreateWeightEntryRequest request) {
+        // La aplicación solo permite un peso por usuario y fecha.
         Long userId = currentUserProvider.getCurrentUserId();
         weightEntryRepository.findByUserIdAndEntryDate(userId, request.entryDate())
                 .ifPresent(existing -> {
                     throw new WeightEntryAlreadyExistsException("Ya existe un registro para la fecha " + request.entryDate());
                 });
 
+        // Si no existe, se crea el registro diario y se devuelve listo para la API.
         WeightEntry saved = weightEntryRepository.save(
                 new WeightEntry(null, userId, request.entryDate(), request.weightKg(), request.notes())
         );

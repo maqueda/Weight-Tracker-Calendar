@@ -28,11 +28,13 @@ public class UpdateWeightEntryUseCase {
 
     @Transactional
     public WeightEntryResponse handle(Long entryId, UpdateWeightEntryRequest request) {
+        // Solo se permite editar registros que pertenecen al usuario actual.
         Long userId = currentUserProvider.getCurrentUserId();
         WeightEntry existing = weightEntryRepository.findById(entryId)
                 .filter(weightEntry -> weightEntry.userId().equals(userId))
                 .orElseThrow(() -> new WeightEntryNotFoundException("No existe el registro " + entryId));
 
+        // Se conserva la fecha original y solo cambian peso y notas.
         WeightEntry saved = weightEntryRepository.save(existing.withUpdatedWeight(request.weightKg(), request.notes()));
         return weightEntryResponseMapper.toResponse(saved);
     }

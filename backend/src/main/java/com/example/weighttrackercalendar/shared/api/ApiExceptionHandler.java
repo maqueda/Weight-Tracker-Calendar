@@ -26,6 +26,8 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler({MethodArgumentNotValidException.class, ConstraintViolationException.class, IllegalArgumentException.class})
     public ResponseEntity<ApiErrorResponse> handleBadRequest(Exception exception) {
+        // Centraliza errores funcionales y de validación para que el frontend
+        // reciba mensajes consistentes.
         return buildResponse(HttpStatus.BAD_REQUEST, exception.getMessage());
     }
 

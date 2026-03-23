@@ -30,6 +30,8 @@ public class GetWeeklySummariesUseCase {
     }
 
     public List<WeeklySummaryResponse> handle(int year) {
+        // El resumen semanal compara domingo final contra domingo inicial.
+        // Si falta alguno de los dos pesos, la semana queda incompleta.
         LocalDate firstDay = LocalDate.of(year, 1, 1);
         LocalDate lastDay = firstDay.withMonth(12).withDayOfMonth(31);
         LocalDate firstRelevantDay = firstDay.minusDays(7);

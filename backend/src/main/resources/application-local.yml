@@ -1,0 +1,4 @@
+DB_URL: jdbc:oracle:thin:@localhost:1521/XEPDB1
+DB_USERNAME: weight_calendar
+DB_PASSWORD: weight_calendar
+APP_CORS_ALLOWED_ORIGINS: http://localhost:5173

@@ -5,7 +5,7 @@
         <p class="eyebrow">Weight Tracker Calendar</p>
         <h1>Seguimiento anual de peso</h1>
         <p class="subtitle">
-          Registra tu peso por dia y revisa la variacion semanal de domingo a domingo.
+          Registra tu peso por día y revisa la variación semanal de domingo a domingo.
         </p>
       </div>
       <div class="summary-card">
@@ -15,7 +15,7 @@
           <p class="summary-copy">{{ summaryCopy }}</p>
         </template>
         <template v-else>
-          <p class="summary-value">Sin datos aun</p>
+          <p class="summary-value">Sin datos aún</p>
         </template>
       </div>
     </header>
@@ -26,9 +26,9 @@
     <section v-else class="layout">
       <div class="calendar-section">
         <div class="toolbar">
-          <button type="button" @click="changeYear(-1)">Ano anterior</button>
+          <button type="button" @click="changeYear(-1)">Año anterior</button>
           <strong>{{ store.year }}</strong>
-          <button type="button" @click="changeYear(1)">Ano siguiente</button>
+          <button type="button" @click="changeYear(1)">Año siguiente</button>
         </div>
 
         <div class="month-grid">
