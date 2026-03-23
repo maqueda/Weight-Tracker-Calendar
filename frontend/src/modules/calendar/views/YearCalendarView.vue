@@ -30,7 +30,10 @@
         @save="handleGoalSave"
       />
 
-      <MonthlyTrendChart :monthly-summaries="store.monthlySummaries" />
+      <MonthlyTrendChart
+        :monthly-summaries="store.monthlySummaries"
+        :weight-goal="store.weightGoal"
+      />
 
       <section class="layout">
         <div class="calendar-section">
