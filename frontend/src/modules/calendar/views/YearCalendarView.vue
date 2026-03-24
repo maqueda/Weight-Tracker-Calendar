@@ -80,9 +80,11 @@
                     <div class="day-content">
                       <small v-if="day.weight" class="day-weight">{{ day.weight }}</small>
                     </div>
-                    <em v-if="day.sunday && weeklySummaryMap[day.date]" class="day-summary">
-                      {{ weeklySummaryMap[day.date] }}
-                    </em>
+                    <div v-if="day.sunday && weeklySummaryMap[day.date]" class="day-summary-wrap">
+                      <em class="day-summary">
+                        {{ weeklySummaryMap[day.date] }}
+                      </em>
+                    </div>
                   </button>
                   <div v-else class="day day-placeholder" aria-hidden="true"></div>
                 </template>
@@ -184,7 +186,7 @@ const months = computed<MonthBlock[]>(() => {
       entryId: day.entryId,
       date: day.date,
       label: day.dayOfMonth,
-      weight: day.weightKg !== null ? `${day.weightKg.toFixed(1)} kg` : "",
+      weight: day.weightKg !== null ? day.weightKg.toFixed(1) : "",
       hasEntry: day.hasEntry,
       sunday: day.sunday,
       tone: toneByDate.value[day.date] ?? "none"
@@ -301,9 +303,11 @@ h1 { margin: 8px 0 12px; font-size: clamp(2rem, 4vw, 3.8rem); }
 .days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); grid-auto-rows: 98px; gap: 8px; align-items: stretch; }
 .day { position: relative; min-height: 0; width: 100%; border: 0; border-radius: 14px; background: #eef4fb; color: #18304c; display: flex; flex-direction: column; justify-content: flex-start; padding: 10px 9px; cursor: pointer; text-align: left; overflow: hidden; gap: 6px; }
 .day-number { font-size: 1rem; font-weight: 700; line-height: 1; }
-.day-content { display: flex; flex: 1; min-height: 0; flex-direction: column; justify-content: flex-end; }
-.day-weight { display: block; color: #35506d; font-size: 0.86rem; font-weight: 600; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.day-summary { position: absolute; right: 6px; bottom: 6px; display: inline-flex; align-items: center; justify-content: center; min-width: 30px; max-width: calc(100% - 12px); padding: 2px 6px; border-radius: 999px; background: rgba(19,34,56,0.12); font-style: normal; font-size: 0.66rem; font-weight: 700; color: #214a31; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.day-content { display: flex; flex: 1; min-height: 0; flex-direction: column; justify-content: flex-end; padding-right: 0; }
+.day-weight { display: block; color: #35506d; font-size: 0.84rem; font-weight: 700; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.day-summary-wrap { position: absolute; right: 6px; bottom: 6px; pointer-events: none; }
+.day-summary { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; max-width: 38px; padding: 2px 5px; border-radius: 999px; background: rgba(19,34,56,0.14); font-style: normal; font-size: 0.62rem; font-weight: 700; color: #214a31; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
+.day.sunday .day-weight { padding-right: 34px; }
 .day.selected { outline: 2px solid #ff8b61; }
 .day.filled { background: #d9ecff; }
 .day.sunday { background: #eef8e8; }
@@ -322,6 +326,9 @@ h1 { margin: 8px 0 12px; font-size: clamp(2rem, 4vw, 3.8rem); }
   .day { padding: 7px 5px; border-radius: 12px; }
   .day-number { font-size: 0.86rem; }
   .day-weight { font-size: 0.68rem; }
-  .day-summary { right: 4px; bottom: 4px; min-width: 24px; padding: 1px 4px; font-size: 0.58rem; }
+  .day-weight { font-size: 0.72rem; }
+  .day-summary-wrap { right: 4px; bottom: 4px; }
+  .day-summary { min-width: 24px; max-width: 34px; padding: 1px 4px; font-size: 0.56rem; }
+  .day.sunday .day-weight { padding-right: 30px; }
 }
 </style>
