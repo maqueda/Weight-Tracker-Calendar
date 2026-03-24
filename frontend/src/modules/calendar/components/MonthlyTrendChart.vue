@@ -23,8 +23,7 @@
 import { computed } from "vue";
 import type { MonthlySummary } from "../../monthly-summary/types/monthlySummary";
 import type { WeightGoal } from "../../weight-goal/types/weightGoal";
-
-type ChartTone = "down" | "up" | "flat" | "none";
+import { buildChartCopy, calculateBarHeight, resolveTrendTone } from "../utils/monthlyTrend";
 
 const props = defineProps<{
   monthlySummaries: MonthlySummary[];
@@ -32,12 +31,7 @@ const props = defineProps<{
 }>();
 
 const baselineWeight = computed(() => props.weightGoal?.startWeightKg ?? null);
-
-const chartCopy = computed(() =>
-  baselineWeight.value !== null
-    ? `Cada barra representa el peso medio y se compara con el peso inicial de ${baselineWeight.value.toFixed(1)} kg.`
-    : "Cada barra representa el peso medio de ese mes."
-);
+const chartCopy = computed(() => buildChartCopy(baselineWeight.value));
 
 const chartMonths = computed(() => {
   const values = props.monthlySummaries
@@ -51,25 +45,10 @@ const chartMonths = computed(() => {
     month: month.month,
     label: month.monthLabel,
     value: month.averageWeightKg !== null ? `${month.averageWeightKg.toFixed(1)} kg` : "Sin datos",
-    height: month.averageWeightKg !== null ? Math.max(((month.averageWeightKg - min) / range) * 100, 12) : 0,
-    tone: resolveTone(month.averageWeightKg, baselineWeight.value)
+    height: calculateBarHeight(month.averageWeightKg, min, range),
+    tone: resolveTrendTone(month.averageWeightKg, baselineWeight.value)
   }));
 });
-
-function resolveTone(value: number | null, baseline: number | null): ChartTone {
-  if (value === null || baseline === null) {
-    return "none";
-  }
-
-  const delta = value - baseline;
-  if (delta > 0.1) {
-    return "up";
-  }
-  if (delta < -0.1) {
-    return "down";
-  }
-  return "flat";
-}
 </script>
 
 <style scoped>

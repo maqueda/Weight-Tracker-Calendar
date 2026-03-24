@@ -190,6 +190,37 @@ npm run build
 - Tendencia mensual por medias
 - Panel lateral para registrar o corregir el peso del día seleccionado
 
+## Tests
+
+### Backend
+
+Desde `backend/`:
+
+```powershell
+mvn test
+```
+
+La batería actual cubre:
+
+- calendario anual completo
+- resumen semanal
+- resumen mensual
+- objetivo de peso y cálculo de progreso
+
+### Frontend
+
+Desde `frontend/`:
+
+```powershell
+npm test
+```
+
+Los tests de frontend están centrados en lógica sencilla y fácil de leer, por ejemplo:
+
+- cómo se decide si un mes va en subida, bajada o estable
+- cómo se construye el texto explicativo de la gráfica
+- cómo se calcula la altura mínima visible de las barras
+
 ## Notas de arquitectura
 
 - El backend sigue una estructura modular por dominio.
