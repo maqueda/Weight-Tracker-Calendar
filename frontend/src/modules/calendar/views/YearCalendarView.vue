@@ -33,6 +33,11 @@
     <p v-else-if="store.loading" class="feedback info">Actualizando calendario...</p>
 
     <section v-if="!showInitialLoading" class="stack">
+      <DashboardMetrics
+        :metrics="dashboardMetrics"
+        @export="exportCsv"
+      />
+
       <WeightGoalPanel
         :goal="store.weightGoal"
         :saving="store.savingGoal"
@@ -136,9 +141,12 @@ import { computed, nextTick, onMounted, ref, type ComponentPublicInstance } from
 import WeightEntryPanel from "../components/WeightEntryPanel.vue";
 import WeightGoalPanel from "../components/WeightGoalPanel.vue";
 import MonthlyTrendChart from "../components/MonthlyTrendChart.vue";
+import DashboardMetrics from "../components/DashboardMetrics.vue";
 import { useCalendarStore } from "../store/useCalendarStore";
 import type { DayTone } from "../types/calendar";
 import { buildWeekSummaryPresentation, calculateStreakSummary, filterMonthsBySelection } from "../utils/calendarInsights";
+import { buildDashboardMetrics } from "../utils/dashboardMetrics";
+import { buildWeightEntriesCsv, downloadCsvFile } from "../utils/csvExport";
 
 type DayCell = {
   kind: "day";
@@ -260,6 +268,9 @@ const weekSummaryPresentation = computed(() => buildWeekSummaryPresentation(curr
 const summaryHeadline = computed(() => weekSummaryPresentation.value.headline);
 const summaryCopy = computed(() => weekSummaryPresentation.value.copy);
 const streakSummary = computed(() => calculateStreakSummary(store.days));
+const dashboardMetrics = computed(() =>
+  buildDashboardMetrics(store.days, store.weightGoal, streakSummary.value.bestStreak, store.year)
+);
 
 const streakHeadline = computed(() =>
   streakSummary.value.currentStreak > 0
@@ -311,6 +322,11 @@ async function jumpToToday() {
     behavior: "smooth",
     block: "start"
   });
+}
+
+function exportCsv() {
+  const csv = buildWeightEntriesCsv(store.days);
+  downloadCsvFile(csv, `weight-tracker-calendar-${store.year}.csv`);
 }
 
 function setMonthCardRef(monthNumber: number, element: Element | ComponentPublicInstance | null) {
