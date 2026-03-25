@@ -2,6 +2,8 @@ import { clearAuthToken, getAuthToken } from "../../modules/auth/services/authSt
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080/api/v1";
 
+// Cliente HTTP mínimo compartido por toda la app. Añade el token cuando existe
+// y fuerza volver al login si la sesión deja de ser válida.
 export async function http<T>(path: string, init?: RequestInit): Promise<T> {
   const token = getAuthToken();
   const response = await fetch(`${API_BASE_URL}${path}`, {

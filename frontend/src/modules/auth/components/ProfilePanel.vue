@@ -15,44 +15,58 @@
       </div>
     </header>
 
-    <section class="card">
-      <div class="card-head">
-        <div>
-          <p class="eyebrow">Perfil</p>
-          <h2>Información personal</h2>
+    <section class="profile-layout">
+      <section class="card account-overview">
+        <p class="eyebrow">Cuenta</p>
+        <h2>{{ accountTitle }}</h2>
+        <p class="copy">
+          Desde aquí puedes mantener al día tus datos personales y la forma en la que se identifica tu cuenta.
+        </p>
+        <div class="account-chips">
+          <span class="account-chip">Zona horaria {{ authStore.user?.timezone ?? "sin definir" }}</span>
+          <span class="account-chip">{{ profileForm.email || "Sin correo configurado" }}</span>
         </div>
-      </div>
+      </section>
 
-      <p v-if="successMessage" class="success">{{ successMessage }}</p>
-      <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
+      <section class="card">
+        <div class="card-head">
+          <div>
+            <p class="eyebrow">Perfil</p>
+            <h2>Información personal</h2>
+          </div>
+        </div>
 
-      <form class="profile-form" @submit.prevent="handleProfileSave">
-        <label>
-          <span>Usuario</span>
-          <input v-model="profileForm.username" autocomplete="username" required />
-        </label>
-        <label>
-          <span>Nombre</span>
-          <input v-model="profileForm.firstName" autocomplete="given-name" required />
-        </label>
-        <label>
-          <span>Apellidos</span>
-          <input v-model="profileForm.lastName" autocomplete="family-name" />
-        </label>
-        <label>
-          <span>Correo</span>
-          <input v-model="profileForm.email" type="email" autocomplete="email" />
-        </label>
-        <button :disabled="authStore.loading" type="submit">Guardar datos</button>
-      </form>
+        <p v-if="successMessage" class="success">{{ successMessage }}</p>
+        <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
+
+        <form class="profile-form" @submit.prevent="handleProfileSave">
+          <label>
+            <span>Usuario</span>
+            <input v-model="profileForm.username" autocomplete="username" required />
+          </label>
+          <label>
+            <span>Nombre</span>
+            <input v-model="profileForm.firstName" autocomplete="given-name" required />
+          </label>
+          <label>
+            <span>Apellidos</span>
+            <input v-model="profileForm.lastName" autocomplete="family-name" />
+          </label>
+          <label>
+            <span>Correo</span>
+            <input v-model="profileForm.email" type="email" autocomplete="email" />
+          </label>
+          <button :disabled="authStore.loading" type="submit">Guardar datos</button>
+        </form>
+      </section>
+
+      <ChangePasswordPanel />
     </section>
-
-    <ChangePasswordPanel />
   </section>
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, watch } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 import ChangePasswordPanel from "./ChangePasswordPanel.vue";
 import { useAuthStore } from "../store/useAuthStore";
 import { buildProfileFormState, toUpdateProfileInput } from "../utils/profileForm";
@@ -74,6 +88,10 @@ const profileForm = reactive({
   lastName: "",
   email: ""
 });
+
+const accountTitle = computed(() =>
+  [profileForm.firstName, profileForm.lastName].filter(Boolean).join(" ") || profileForm.username || "Tu cuenta"
+);
 
 watch(
   () => authStore.user,
@@ -103,12 +121,17 @@ async function handleProfileSave() {
   gap: 24px;
 }
 
+.profile-layout {
+  display: grid;
+  gap: 24px;
+}
+
 .profile-header,
 .card,
 :deep(.password-card) {
   padding: 24px;
   border-radius: 24px;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.97);
   border: 1px solid #d9e5f2;
   box-shadow: 0 20px 50px rgba(19, 34, 56, 0.08);
 }
@@ -147,6 +170,30 @@ h2 {
 
 .card-head {
   margin-bottom: 16px;
+}
+
+.account-overview {
+  background:
+    radial-gradient(circle at top right, rgba(255, 179, 71, 0.18), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(244, 249, 255, 0.98));
+}
+
+.account-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.account-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #eef4fb;
+  color: #35506d;
+  font-size: 0.85rem;
+  font-weight: 600;
 }
 
 .profile-form {

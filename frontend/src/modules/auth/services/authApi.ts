@@ -7,6 +7,8 @@ import type {
   UpdateProfileInput
 } from "../types/auth";
 
+// Este cliente agrupa todas las llamadas de autenticación para que el store
+// de sesión no dependa de rutas hardcodeadas repartidas por la UI.
 export function login(input: { username: string; password: string }) {
   return http<AuthResponse>("/auth/login", {
     method: "POST",

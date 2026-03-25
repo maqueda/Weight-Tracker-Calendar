@@ -4,6 +4,9 @@
       <div>
         <p class="password-label">Seguridad</p>
         <h3>Cambiar contraseña</h3>
+        <p class="password-copy">
+          Usa una contraseña nueva y fácil de recordar para ti, pero difícil de adivinar.
+        </p>
       </div>
     </div>
 
@@ -47,6 +50,8 @@
 import { ref } from "vue";
 import { useAuthStore } from "../store/useAuthStore";
 
+// Este formulario solo gestiona el cambio de contraseña. Los demás datos del
+// usuario se editan en el panel de perfil para separar responsabilidades.
 const authStore = useAuthStore();
 const currentPassword = ref("");
 const newPassword = ref("");
@@ -90,6 +95,12 @@ async function handleSubmit() {
 .password-head h3 {
   margin: 6px 0 0;
   color: #18304c;
+}
+
+.password-copy {
+  margin: 10px 0 0;
+  color: #4d627b;
+  line-height: 1.5;
 }
 
 .password-label {

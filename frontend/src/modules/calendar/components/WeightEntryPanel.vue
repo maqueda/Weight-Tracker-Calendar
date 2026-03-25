@@ -4,7 +4,7 @@
       <p class="panel-label">Fecha seleccionada</p>
       <h2>{{ formattedDate }}</h2>
       <p class="panel-copy">
-        Guarda tu peso diario y corrige el historico cuando lo necesites.
+        Guarda tu peso diario y corrige el histórico cuando lo necesites.
       </p>
 
       <form class="form" @submit.prevent="handleSubmit">
@@ -33,6 +33,19 @@
         </button>
       </form>
     </div>
+
+    <div v-else class="panel-empty">
+      <p class="panel-label">Registro diario</p>
+      <h2>Selecciona un día</h2>
+      <p class="panel-copy">
+        Haz clic en una casilla del calendario para registrar tu peso, añadir notas o corregir un dato anterior.
+      </p>
+
+      <ul class="panel-tips">
+        <li>Los domingos muestran la variación semanal cuando la semana está completa.</li>
+        <li>El color de cada día te ayuda a detectar subidas, bajadas o estabilidad.</li>
+      </ul>
+    </div>
   </aside>
 </template>
 
@@ -40,6 +53,8 @@
 import { computed, ref, watch } from "vue";
 import type { CalendarDay } from "../types/calendar";
 
+// Este panel reutiliza la misma vista para alta y edición; cambia de modo
+// según si el día seleccionado ya tiene un registro persistido.
 const props = defineProps<{
   selectedDay: CalendarDay | null;
   saving: boolean;
@@ -94,12 +109,23 @@ function handleSubmit() {
   top: 24px;
 }
 
-.panel-content {
+.panel-content,
+.panel-empty {
   border-radius: 24px;
-  background: #132238;
   color: #f5f9ff;
   padding: 24px;
   box-shadow: 0 20px 50px rgba(19, 34, 56, 0.18);
+}
+
+.panel-content {
+  background: #132238;
+}
+
+.panel-empty {
+  background:
+    radial-gradient(circle at top right, rgba(255, 179, 71, 0.18), transparent 34%),
+    linear-gradient(180deg, #112237 0%, #0d1828 100%);
+  border: 1px solid rgba(151, 173, 198, 0.18);
 }
 
 .panel-label {
@@ -113,6 +139,15 @@ function handleSubmit() {
 .panel-copy {
   color: #c7d4e4;
   line-height: 1.5;
+}
+
+.panel-tips {
+  margin: 18px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 8px;
+  color: #aac0d6;
+  line-height: 1.45;
 }
 
 .form {

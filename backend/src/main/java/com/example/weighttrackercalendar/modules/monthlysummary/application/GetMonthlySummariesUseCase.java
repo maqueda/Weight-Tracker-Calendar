@@ -34,6 +34,9 @@ public class GetMonthlySummariesUseCase {
     public List<MonthlySummaryResponse> handle(int year) {
         LocalDate firstDay = LocalDate.of(year, 1, 1);
         LocalDate lastDay = firstDay.withMonth(12).withDayOfMonth(31);
+
+        // El backend entrega el mes ya agregado para que el frontend pueda
+        // centrarse en la visualización y no en la estadística.
         Map<Integer, List<WeightEntry>> entriesByMonth = weightEntryRepository
                 .findAllByUserIdAndEntryDateBetween(currentUserProvider.getCurrentUserId(), firstDay, lastDay)
                 .stream()

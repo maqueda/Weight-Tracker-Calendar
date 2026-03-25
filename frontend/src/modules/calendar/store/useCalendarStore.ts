@@ -16,6 +16,8 @@ type SaveEntryInput = {
   notes?: string;
 };
 
+// Este store actúa como punto único de verdad para toda la vista anual:
+// calendario, resúmenes, objetivo y operaciones de guardado.
 export const useCalendarStore = defineStore("calendar", {
   state: () => ({
     year: new Date().getFullYear(),
@@ -50,6 +52,8 @@ export const useCalendarStore = defineStore("calendar", {
       }
       this.errorMessage = "";
       try {
+        // Se cargan en paralelo para que la pantalla anual refresque
+        // todos los paneles con la misma foto del año seleccionado.
         const [calendar, weeklySummaries, monthlySummaries, weightGoal] = await Promise.all([
           getYearCalendar(targetYear),
           getWeeklySummaries(targetYear),
@@ -92,6 +96,8 @@ export const useCalendarStore = defineStore("calendar", {
           });
         }
 
+        // Tras guardar, se vuelve a leer el año para mantener consistencia
+        // entre calendario, resúmenes y métricas sin lógica de parcheo local.
         await this.fetchYearData(this.year, false);
         this.selectedDate = input.entryDate;
       } catch (error) {

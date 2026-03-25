@@ -27,7 +27,8 @@
             <p class="summary-copy">{{ summaryCopy }}</p>
           </template>
           <template v-else>
-            <p class="summary-value">Sin datos aún</p>
+            <p class="summary-value">Semana sin registros</p>
+            <p class="summary-copy">Cuando guardes tu primer domingo, aquí verás la comparación semanal.</p>
           </template>
         </div>
 
@@ -195,6 +196,8 @@ type MonthBlock = {
   days: CalendarCell[];
 };
 
+// La vista anual centraliza lectura y escritura del calendario para que
+// filtros, resúmenes y edición compartan el mismo estado reactivo.
 const store = useCalendarStore();
 const authStore = useAuthStore();
 const weekdays = ["L", "M", "X", "J", "V", "S", "D"];

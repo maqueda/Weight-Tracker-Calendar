@@ -36,6 +36,8 @@ public class UpdateProfileUseCase {
         String email = normalizeEmail(request.email());
         String displayName = buildDisplayName(request.firstName(), request.lastName());
 
+        // Se valida unicidad excluyendo al propio usuario para permitir
+        // guardar el mismo valor actual sin falsos conflictos.
         appUserRepository.findByUsername(username)
                 .filter(user -> !user.id().equals(currentUser.id()))
                 .ifPresent(user -> {
@@ -50,6 +52,8 @@ public class UpdateProfileUseCase {
                     });
         }
 
+        // La actualización conserva contraseña, estado y zona horaria porque
+        // este caso de uso solo modifica identidad visible y correo.
         AppUser updatedUser = appUserRepository.save(new AppUser(
                 currentUser.id(),
                 username,

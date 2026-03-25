@@ -29,6 +29,8 @@ public class LoginUseCase {
     }
 
     public AuthResponse handle(LoginRequest request) {
+        // El login siempre valida contra el usuario persistido para evitar
+        // que un token o cliente antiguo siga usando datos de sesión obsoletos.
         AppUser appUser = appUserRepository.findByUsername(request.username().trim())
                 .orElseThrow(InvalidCredentialsException::new);
 

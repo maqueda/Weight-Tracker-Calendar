@@ -47,6 +47,8 @@ public class GetWeeklySummariesUseCase {
                 .datesUntil(lastDay.plusDays(1))
                 .filter(date -> date.getDayOfWeek() == DayOfWeek.SUNDAY)
                 .map(sundayEndDate -> {
+                    // Cada domingo mira exactamente siete días atrás para
+                    // construir una comparación homogénea semana a semana.
                     LocalDate sundayStartDate = sundayEndDate.minusDays(7);
                     WeightEntry startEntry = entriesByDate.get(sundayStartDate);
                     WeightEntry endEntry = entriesByDate.get(sundayEndDate);

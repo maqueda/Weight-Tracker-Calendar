@@ -7,7 +7,8 @@
       </div>
       <p class="chart-copy">{{ chartCopy }}</p>
     </div>
-    <div class="chart">
+
+    <div v-if="hasData" class="chart">
       <div v-for="month in chartMonths" :key="month.month" class="bar-group">
         <div class="bar-track">
           <div class="bar-fill" :class="month.tone" :style="{ height: `${month.height}%` }"></div>
@@ -15,6 +16,13 @@
         <strong>{{ month.label }}</strong>
         <small>{{ month.value }}</small>
       </div>
+    </div>
+
+    <div v-else class="chart-empty">
+      <strong>Aún no hay tendencia mensual</strong>
+      <p>
+        Cuando registres varios pesos a lo largo del año, aquí verás una comparación clara de la media de cada mes.
+      </p>
     </div>
   </section>
 </template>
@@ -25,6 +33,8 @@ import type { MonthlySummary } from "../../monthly-summary/types/monthlySummary"
 import type { WeightGoal } from "../../weight-goal/types/weightGoal";
 import { buildChartCopy, calculateBarHeight, resolveTrendTone } from "../utils/monthlyTrend";
 
+// La gráfica mensual reutiliza resúmenes agregados del backend para mantener
+// el componente ligero y evitar recalcular estadísticas en el navegador.
 const props = defineProps<{
   monthlySummaries: MonthlySummary[];
   weightGoal: WeightGoal | null;
@@ -32,6 +42,7 @@ const props = defineProps<{
 
 const baselineWeight = computed(() => props.weightGoal?.startWeightKg ?? null);
 const chartCopy = computed(() => buildChartCopy(baselineWeight.value));
+const hasData = computed(() => props.monthlySummaries.some((month) => month.averageWeightKg !== null));
 
 const chartMonths = computed(() => {
   const values = props.monthlySummaries
@@ -58,6 +69,9 @@ const chartMonths = computed(() => {
 .chart-head h2, .chart-copy { margin: 0; }
 .chart-copy { color: #5f7895; }
 .chart { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 10px; align-items: end; }
+.chart-empty { display: grid; gap: 8px; padding: 20px; border-radius: 18px; background: #eef4fb; color: #35506d; min-height: 160px; align-content: center; text-align: center; }
+.chart-empty strong { color: #18304c; font-size: 1.05rem; }
+.chart-empty p { margin: 0; line-height: 1.5; }
 .bar-group { text-align: center; }
 .bar-track { height: 180px; display: flex; align-items: end; justify-content: center; padding: 8px 0; border-radius: 14px; background: #eef4fb; }
 .bar-fill { width: 100%; max-width: 24px; border-radius: 999px; background: linear-gradient(180deg, #7b8da4 0%, #132238 100%); }
