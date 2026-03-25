@@ -42,8 +42,12 @@ export const useCalendarStore = defineStore("calendar", {
   },
   actions: {
     async loadYear(year?: number) {
-      const targetYear = year ?? this.year;
-      this.loading = true;
+      await this.fetchYearData(year ?? this.year, true);
+    },
+    async fetchYearData(targetYear: number, showLoading: boolean) {
+      if (showLoading) {
+        this.loading = true;
+      }
       this.errorMessage = "";
       try {
         const [calendar, weeklySummaries, monthlySummaries, weightGoal] = await Promise.all([
@@ -63,7 +67,9 @@ export const useCalendarStore = defineStore("calendar", {
       } catch (error) {
         this.errorMessage = error instanceof Error ? error.message : "No se pudieron cargar los datos.";
       } finally {
-        this.loading = false;
+        if (showLoading) {
+          this.loading = false;
+        }
       }
     },
     selectDate(date: string) {
@@ -86,7 +92,7 @@ export const useCalendarStore = defineStore("calendar", {
           });
         }
 
-        await this.loadYear(this.year);
+        await this.fetchYearData(this.year, false);
         this.selectedDate = input.entryDate;
       } catch (error) {
         this.errorMessage = error instanceof Error ? error.message : "No se pudo guardar el registro.";

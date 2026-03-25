@@ -21,9 +21,10 @@
     </header>
 
     <p v-if="store.errorMessage" class="feedback error">{{ store.errorMessage }}</p>
-    <p v-if="store.loading" class="feedback">Cargando calendario...</p>
+    <p v-if="showInitialLoading" class="feedback">Cargando calendario...</p>
+    <p v-else-if="store.loading" class="feedback info">Actualizando calendario...</p>
 
-    <section v-else class="stack">
+    <section v-if="!showInitialLoading" class="stack">
       <WeightGoalPanel
         :goal="store.weightGoal"
         :saving="store.savingGoal"
@@ -213,6 +214,7 @@ const weeklySummaryMap = computed<Record<string, string>>(() =>
 );
 
 const currentWeekSummary = computed(() => store.currentWeekSummary);
+const showInitialLoading = computed(() => store.loading && store.days.length === 0);
 
 const summaryHeadline = computed(() => {
   if (!currentWeekSummary.value) return "Sin datos";
@@ -283,6 +285,7 @@ h1 { margin: 8px 0 12px; font-size: clamp(2rem, 4vw, 3.8rem); }
 .summary-value { margin: 0; font-size: 1.25rem; font-weight: 600; }
 .summary-copy { color: #c8d5e3; line-height: 1.4; }
 .feedback { margin: 0 0 16px; padding: 14px 16px; border-radius: 14px; background: rgba(255,255,255,0.9); color: #26425f; }
+.info { background: rgba(217, 236, 255, 0.9); color: #21476a; }
 .error { background: #ffe6e2; color: #8a2f25; }
 .layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 24px; }
 .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding: 16px 18px; border-radius: 18px; background: rgba(255,255,255,0.82); border: 1px solid #dce6f2; }
