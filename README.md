@@ -226,7 +226,7 @@ Los tests de frontend están centrados en lógica sencilla y fácil de leer, por
 - El backend sigue una estructura modular por dominio.
 - El frontend consume la API mediante una URL configurable por entorno.
 - Flyway versiona el esquema Oracle.
-- El usuario actual está simulado con un usuario demo temporal (`id = 1`).
+- La aplicación ya usa autenticación local con usuarios reales y sesión JWT.
 
 ## Continuidad del proyecto
 

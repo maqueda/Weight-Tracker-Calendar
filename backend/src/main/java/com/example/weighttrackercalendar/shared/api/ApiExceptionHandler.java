@@ -1,5 +1,9 @@
 package com.example.weighttrackercalendar.shared.api;
 
+import com.example.weighttrackercalendar.modules.auth.domain.InvalidCredentialsException;
+import com.example.weighttrackercalendar.modules.auth.domain.CurrentPasswordMismatchException;
+import com.example.weighttrackercalendar.modules.auth.domain.EmailAlreadyExistsException;
+import com.example.weighttrackercalendar.modules.auth.domain.UsernameAlreadyExistsException;
 import com.example.weighttrackercalendar.modules.weightentry.domain.WeightEntryAlreadyExistsException;
 import com.example.weighttrackercalendar.modules.weightentry.domain.WeightEntryNotFoundException;
 import jakarta.validation.ConstraintViolationException;
@@ -24,10 +28,28 @@ public class ApiExceptionHandler {
         return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage());
     }
 
+    @ExceptionHandler(UsernameAlreadyExistsException.class)
+    public ResponseEntity<ApiErrorResponse> handleUsernameAlreadyExists(UsernameAlreadyExistsException exception) {
+        return buildResponse(HttpStatus.CONFLICT, exception.getMessage());
+    }
+
+    @ExceptionHandler(EmailAlreadyExistsException.class)
+    public ResponseEntity<ApiErrorResponse> handleEmailAlreadyExists(EmailAlreadyExistsException exception) {
+        return buildResponse(HttpStatus.CONFLICT, exception.getMessage());
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidCredentials(InvalidCredentialsException exception) {
+        return buildResponse(HttpStatus.UNAUTHORIZED, exception.getMessage());
+    }
+
+    @ExceptionHandler(CurrentPasswordMismatchException.class)
+    public ResponseEntity<ApiErrorResponse> handleCurrentPasswordMismatch(CurrentPasswordMismatchException exception) {
+        return buildResponse(HttpStatus.UNAUTHORIZED, exception.getMessage());
+    }
+
     @ExceptionHandler({MethodArgumentNotValidException.class, ConstraintViolationException.class, IllegalArgumentException.class})
     public ResponseEntity<ApiErrorResponse> handleBadRequest(Exception exception) {
-        // Centraliza errores funcionales y de validación para que el frontend
-        // reciba mensajes consistentes.
         return buildResponse(HttpStatus.BAD_REQUEST, exception.getMessage());
     }
 
@@ -36,4 +58,3 @@ public class ApiExceptionHandler {
                 .body(new ApiErrorResponse(Instant.now(), status.value(), status.getReasonPhrase(), message));
     }
 }
-

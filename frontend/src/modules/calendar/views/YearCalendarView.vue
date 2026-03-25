@@ -9,6 +9,17 @@
         </p>
       </div>
       <div class="hero-side">
+        <div class="account-card">
+          <div>
+            <p class="summary-label">Sesión</p>
+            <p class="account-name">{{ authStore.user?.displayName ?? authStore.user?.username }}</p>
+          </div>
+          <div class="account-actions">
+            <button type="button" class="profile-button" @click="openProfileWindow">Ver mis datos</button>
+            <button type="button" class="logout-button" @click="authStore.logout()">Salir</button>
+          </div>
+        </div>
+
         <div class="summary-card">
           <p class="summary-label">Resumen semanal</p>
           <template v-if="currentWeekSummary">
@@ -133,6 +144,14 @@
         />
       </section>
     </section>
+
+    <transition name="profile-modal">
+      <div v-if="showProfileModal" class="profile-modal" @click.self="closeProfileModal">
+        <div class="profile-dialog">
+          <ProfilePanel :show-close="true" @close="closeProfileModal" />
+        </div>
+      </div>
+    </transition>
   </main>
 </template>
 
@@ -147,6 +166,8 @@ import type { DayTone } from "../types/calendar";
 import { buildWeekSummaryPresentation, calculateStreakSummary, filterMonthsBySelection } from "../utils/calendarInsights";
 import { buildDashboardMetrics } from "../utils/dashboardMetrics";
 import { buildWeightEntriesCsv, downloadCsvFile } from "../utils/csvExport";
+import { useAuthStore } from "../../auth/store/useAuthStore";
+import ProfilePanel from "../../auth/components/ProfilePanel.vue";
 
 type DayCell = {
   kind: "day";
@@ -175,9 +196,11 @@ type MonthBlock = {
 };
 
 const store = useCalendarStore();
+const authStore = useAuthStore();
 const weekdays = ["L", "M", "X", "J", "V", "S", "D"];
 const selectedMonthFilter = ref<number | "all">("all");
 const monthCardRefs = ref<Record<number, HTMLElement | null>>({});
+const showProfileModal = ref(false);
 
 onMounted(() => {
   store.loadYear(store.year);
@@ -329,6 +352,14 @@ function exportCsv() {
   downloadCsvFile(csv, `weight-tracker-calendar-${store.year}.csv`);
 }
 
+function openProfileWindow() {
+  showProfileModal.value = true;
+}
+
+function closeProfileModal() {
+  showProfileModal.value = false;
+}
+
 function setMonthCardRef(monthNumber: number, element: Element | ComponentPublicInstance | null) {
   monthCardRefs.value[monthNumber] = element instanceof HTMLElement ? element : null;
 }
@@ -363,6 +394,17 @@ function buildCalendarCells(days: DayCell[]): CalendarCell[] {
 .eyebrow { text-transform: uppercase; letter-spacing: 0.12em; font-size: 12px; color: #5f7895; }
 h1 { margin: 8px 0 12px; font-size: clamp(2rem, 4vw, 3.8rem); }
 .subtitle { margin: 0; max-width: 700px; color: #4d627b; }
+.account-card { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding: 18px 20px; border-radius: 20px; background: rgba(255,255,255,0.86); border: 1px solid #d9e5f2; }
+.account-actions { display: flex; gap: 10px; align-items: center; }
+.account-name { margin: 0; font-size: 1rem; font-weight: 700; color: #18304c; }
+.profile-button { border: 1px solid #d3dfec; border-radius: 12px; padding: 10px 14px; background: #fff; color: #18304c; cursor: pointer; }
+.logout-button { border: 0; border-radius: 12px; padding: 10px 14px; background: #132238; color: #f5f9ff; cursor: pointer; }
+.profile-modal { position: fixed; inset: 0; padding: 28px; background: rgba(10, 19, 31, 0.46); backdrop-filter: blur(10px); display: grid; place-items: center; z-index: 50; }
+.profile-dialog { width: min(100%, 920px); max-height: calc(100vh - 56px); overflow: auto; border-radius: 28px; }
+.profile-modal-enter-active, .profile-modal-leave-active { transition: opacity 0.22s ease; }
+.profile-modal-enter-active .profile-dialog, .profile-modal-leave-active .profile-dialog { transition: transform 0.22s ease, opacity 0.22s ease; }
+.profile-modal-enter-from, .profile-modal-leave-to { opacity: 0; }
+.profile-modal-enter-from .profile-dialog, .profile-modal-leave-to .profile-dialog { transform: translateY(12px) scale(0.98); opacity: 0; }
 .summary-card, .streak-card { min-width: 240px; padding: 20px; border-radius: 20px; background: #132238; color: #f5f9ff; }
 .streak-card { background: #1b2b19; }
 .summary-label { margin: 0 0 8px; color: #b8c7d9; }
