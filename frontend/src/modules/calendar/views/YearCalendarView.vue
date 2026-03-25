@@ -8,15 +8,23 @@
           Registra tu peso por día, revisa la variación semanal y compara la tendencia de cada mes.
         </p>
       </div>
-      <div class="summary-card">
-        <p class="summary-label">Resumen semanal</p>
-        <template v-if="currentWeekSummary">
-          <p class="summary-value">{{ summaryHeadline }}</p>
-          <p class="summary-copy">{{ summaryCopy }}</p>
-        </template>
-        <template v-else>
-          <p class="summary-value">Sin datos aún</p>
-        </template>
+      <div class="hero-side">
+        <div class="summary-card">
+          <p class="summary-label">Resumen semanal</p>
+          <template v-if="currentWeekSummary">
+            <p class="summary-value">{{ summaryHeadline }}</p>
+            <p class="summary-copy">{{ summaryCopy }}</p>
+          </template>
+          <template v-else>
+            <p class="summary-value">Sin datos aún</p>
+          </template>
+        </div>
+
+        <div class="streak-card">
+          <p class="summary-label">Rachas</p>
+          <p class="summary-value">{{ streakHeadline }}</p>
+          <p class="summary-copy">{{ streakCopy }}</p>
+        </div>
       </div>
     </header>
 
@@ -39,9 +47,27 @@
       <section class="layout">
         <div class="calendar-section">
           <div class="toolbar">
-            <button type="button" @click="changeYear(-1)">Año anterior</button>
-            <strong>{{ store.year }}</strong>
-            <button type="button" @click="changeYear(1)">Año siguiente</button>
+            <div class="toolbar-nav">
+              <button type="button" @click="changeYear(-1)">Año anterior</button>
+              <strong>{{ store.year }}</strong>
+              <button type="button" @click="changeYear(1)">Año siguiente</button>
+            </div>
+            <div class="toolbar-actions">
+              <label class="month-filter">
+                <span>Mes</span>
+                <select v-model="selectedMonthFilter">
+                  <option value="all">Todos</option>
+                  <option
+                    v-for="month in monthOptions"
+                    :key="month.value"
+                    :value="month.value"
+                  >
+                    {{ month.label }}
+                  </option>
+                </select>
+              </label>
+              <button type="button" class="secondary-button" @click="jumpToToday">Hoy</button>
+            </div>
           </div>
 
           <div class="legend">
@@ -52,9 +78,10 @@
 
           <div class="month-grid">
             <article
-              v-for="month in months"
+              v-for="month in visibleMonths"
               :key="month.name"
               class="month-card"
+              :ref="(element) => setMonthCardRef(month.monthNumber, element)"
             >
               <div class="month-head">
                 <h2>{{ month.name }}</h2>
@@ -105,12 +132,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from "vue";
+import { computed, nextTick, onMounted, ref, type ComponentPublicInstance } from "vue";
 import WeightEntryPanel from "../components/WeightEntryPanel.vue";
 import WeightGoalPanel from "../components/WeightGoalPanel.vue";
 import MonthlyTrendChart from "../components/MonthlyTrendChart.vue";
 import { useCalendarStore } from "../store/useCalendarStore";
 import type { DayTone } from "../types/calendar";
+import { buildWeekSummaryPresentation, calculateStreakSummary, filterMonthsBySelection } from "../utils/calendarInsights";
 
 type DayCell = {
   kind: "day";
@@ -132,6 +160,7 @@ type PlaceholderCell = {
 type CalendarCell = DayCell | PlaceholderCell;
 
 type MonthBlock = {
+  monthNumber: number;
   name: string;
   summary: string;
   days: CalendarCell[];
@@ -139,6 +168,8 @@ type MonthBlock = {
 
 const store = useCalendarStore();
 const weekdays = ["L", "M", "X", "J", "V", "S", "D"];
+const selectedMonthFilter = ref<number | "all">("all");
+const monthCardRefs = ref<Record<number, HTMLElement | null>>({});
 
 onMounted(() => {
   store.loadYear(store.year);
@@ -176,7 +207,7 @@ const months = computed<MonthBlock[]>(() => {
   store.days.forEach((day) => {
     if (!groups.has(day.month)) {
       groups.set(day.month, {
-        name: formatter.format(new Date(day.date)).replace(/^\w/, (value) => value.toUpperCase()),
+        name: formatter.format(new Date(`${day.date}T00:00:00`)).replace(/^\w/, (value) => value.toUpperCase()),
         rawDays: []
       });
     }
@@ -195,11 +226,21 @@ const months = computed<MonthBlock[]>(() => {
   });
 
   return Array.from(groups.entries()).map(([monthNumber, month]) => ({
+    monthNumber,
     name: month.name,
     summary: monthlySummaryMap.value[monthNumber] ?? "Sin registros",
     days: buildCalendarCells(month.rawDays)
   }));
 });
+
+const visibleMonths = computed(() => filterMonthsBySelection(months.value, selectedMonthFilter.value));
+
+const monthOptions = computed(() =>
+  months.value.map((month) => ({
+    value: month.monthNumber,
+    label: month.name
+  }))
+);
 
 const weeklySummaryMap = computed<Record<string, string>>(() =>
   Object.fromEntries(
@@ -215,32 +256,33 @@ const weeklySummaryMap = computed<Record<string, string>>(() =>
 
 const currentWeekSummary = computed(() => store.currentWeekSummary);
 const showInitialLoading = computed(() => store.loading && store.days.length === 0);
+const weekSummaryPresentation = computed(() => buildWeekSummaryPresentation(currentWeekSummary.value));
+const summaryHeadline = computed(() => weekSummaryPresentation.value.headline);
+const summaryCopy = computed(() => weekSummaryPresentation.value.copy);
+const streakSummary = computed(() => calculateStreakSummary(store.days));
 
-const summaryHeadline = computed(() => {
-  if (!currentWeekSummary.value) return "Sin datos";
-  if (!currentWeekSummary.value.complete || currentWeekSummary.value.deltaKg === null) {
-    return `Semana ${currentWeekSummary.value.weekNumber} incompleta`;
+const streakHeadline = computed(() =>
+  streakSummary.value.currentStreak > 0
+    ? `${streakSummary.value.currentStreak} días seguidos`
+    : "Sin racha activa"
+);
+
+const streakCopy = computed(() => {
+  if (streakSummary.value.bestStreak === 0 || !streakSummary.value.lastEntryDate) {
+    return "Empieza a registrar tu peso para ver tu mejor racha.";
   }
-  const delta = currentWeekSummary.value.deltaKg;
-  if (delta > 0) return `Has subido ${delta.toFixed(2)} kg`;
-  if (delta < 0) return `Has bajado ${Math.abs(delta).toFixed(2)} kg`;
-  return "Peso estable";
-});
 
-const summaryCopy = computed(() => {
-  if (!currentWeekSummary.value) return "";
-  return `Del ${formatShortDate(currentWeekSummary.value.sundayStartDate)} al ${formatShortDate(currentWeekSummary.value.sundayEndDate)}.`;
-});
-
-function formatShortDate(value: string) {
-  return new Date(value).toLocaleDateString("es-ES", {
+  const lastEntry = new Date(`${streakSummary.value.lastEntryDate}T00:00:00`).toLocaleDateString("es-ES", {
     day: "numeric",
     month: "short"
   });
-}
+
+  return `Mejor racha: ${streakSummary.value.bestStreak} días. Último registro: ${lastEntry}.`;
+});
 
 function changeYear(direction: number) {
   store.loadYear(store.year + direction);
+  selectedMonthFilter.value = "all";
 }
 
 async function handleSave(payload: { entryId: number | null; entryDate: string; weightKg: number; notes?: string }) {
@@ -251,9 +293,33 @@ async function handleGoalSave(payload: { startWeightKg: number; targetWeightKg: 
   await store.saveGoal(payload);
 }
 
+async function jumpToToday() {
+  const today = new Date();
+  const todayYear = today.getFullYear();
+  const todayMonth = today.getMonth() + 1;
+  const todayDate = today.toISOString().slice(0, 10);
+
+  if (store.year !== todayYear) {
+    await store.loadYear(todayYear);
+  }
+
+  selectedMonthFilter.value = todayMonth;
+  store.selectDate(todayDate);
+
+  await nextTick();
+  monthCardRefs.value[todayMonth]?.scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
+}
+
+function setMonthCardRef(monthNumber: number, element: Element | ComponentPublicInstance | null) {
+  monthCardRefs.value[monthNumber] = element instanceof HTMLElement ? element : null;
+}
+
 function buildCalendarCells(days: DayCell[]): CalendarCell[] {
   if (days.length === 0) return [];
-  const firstDate = new Date(days[0].date);
+  const firstDate = new Date(`${days[0].date}T00:00:00`);
   const mondayBasedOffset = (firstDate.getDay() + 6) % 7;
   const cells: CalendarCell[] = [];
 
@@ -277,10 +343,12 @@ function buildCalendarCells(days: DayCell[]): CalendarCell[] {
 .page { padding: 32px; }
 .stack { display: grid; gap: 24px; }
 .hero { display: flex; justify-content: space-between; gap: 24px; align-items: stretch; margin-bottom: 32px; }
+.hero-side { display: grid; gap: 16px; min-width: 260px; }
 .eyebrow { text-transform: uppercase; letter-spacing: 0.12em; font-size: 12px; color: #5f7895; }
 h1 { margin: 8px 0 12px; font-size: clamp(2rem, 4vw, 3.8rem); }
 .subtitle { margin: 0; max-width: 700px; color: #4d627b; }
-.summary-card { min-width: 240px; padding: 20px; border-radius: 20px; background: #132238; color: #f5f9ff; }
+.summary-card, .streak-card { min-width: 240px; padding: 20px; border-radius: 20px; background: #132238; color: #f5f9ff; }
+.streak-card { background: #1b2b19; }
 .summary-label { margin: 0 0 8px; color: #b8c7d9; }
 .summary-value { margin: 0; font-size: 1.25rem; font-weight: 600; }
 .summary-copy { color: #c8d5e3; line-height: 1.4; }
@@ -288,8 +356,12 @@ h1 { margin: 8px 0 12px; font-size: clamp(2rem, 4vw, 3.8rem); }
 .info { background: rgba(217, 236, 255, 0.9); color: #21476a; }
 .error { background: #ffe6e2; color: #8a2f25; }
 .layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 24px; }
-.toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding: 16px 18px; border-radius: 18px; background: rgba(255,255,255,0.82); border: 1px solid #dce6f2; }
+.toolbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 14px; padding: 16px 18px; border-radius: 18px; background: rgba(255,255,255,0.82); border: 1px solid #dce6f2; }
+.toolbar-nav, .toolbar-actions { display: flex; align-items: center; gap: 12px; }
 .toolbar button { border: 0; border-radius: 12px; padding: 10px 14px; background: #132238; color: #f5f9ff; cursor: pointer; }
+.secondary-button { background: #35506d !important; }
+.month-filter { display: inline-flex; align-items: center; gap: 8px; color: #35506d; font-weight: 600; }
+.month-filter select { border: 1px solid #d3dfec; border-radius: 10px; padding: 8px 10px; background: #fff; color: #18304c; }
 .legend { display: flex; gap: 16px; align-items: center; margin-bottom: 18px; color: #4d627b; flex-wrap: wrap; }
 .legend span { display: inline-flex; gap: 8px; align-items: center; }
 .legend-dot { width: 10px; height: 10px; border-radius: 999px; display: inline-block; }
@@ -319,7 +391,12 @@ h1 { margin: 8px 0 12px; font-size: clamp(2rem, 4vw, 3.8rem); }
 .day.flat { box-shadow: inset 0 0 0 2px rgba(123, 141, 164, 0.2); }
 .day-placeholder { background: transparent; border: 1px dashed rgba(170,187,205,0.35); cursor: default; gap: 0; }
 @media (max-width: 1400px) { .month-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .month-grid { grid-template-columns: 1fr; } }
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+  .month-grid { grid-template-columns: 1fr; }
+  .toolbar { flex-direction: column; align-items: stretch; }
+  .toolbar-nav, .toolbar-actions { justify-content: space-between; flex-wrap: wrap; }
+}
 @media (max-width: 768px) {
   .page { padding: 20px; }
   .hero { flex-direction: column; }
@@ -328,7 +405,6 @@ h1 { margin: 8px 0 12px; font-size: clamp(2rem, 4vw, 3.8rem); }
   .days { grid-auto-rows: 64px; }
   .day { padding: 7px 5px; border-radius: 12px; }
   .day-number { font-size: 0.86rem; }
-  .day-weight { font-size: 0.68rem; }
   .day-weight { font-size: 0.72rem; }
   .day-summary-wrap { right: 4px; bottom: 4px; }
   .day-summary { min-width: 24px; max-width: 34px; padding: 1px 4px; font-size: 0.56rem; }
